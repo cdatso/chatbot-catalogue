@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chatbot catalogue — Analyses de films</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header>
+  <h1>Poser une question au catalogue</h1>
+  <p class="sous-titre">Un chatbot documentaire sur les analyses publiées du site
+    <a href="https://www.cdatso.be/analyses-de-films/" target="_blank" rel="noopener">Analyses de films</a>.</p>
+</header>
+
+<main>
+  <form id="formulaire-question">
+    <label for="champ-question">Votre question</label>
+    <textarea id="champ-question" name="question" maxlength="500" rows="3" required
+      placeholder="Ex. Quel film évoque la guerre froide ?"></textarea>
+    <button type="submit">Demander</button>
+  </form>
+
+  <div id="zone-reponse" aria-live="polite"></div>
+
+  <p class="avertissement">Réponses générées à partir des analyses publiées — vérifiez sur la page citée.</p>
+</main>
+
+<footer>
+  <p>Contenu sous licence
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.fr" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a>
+    — Analyses de films (www.cdatso.be).</p>
+</footer>
+
+<script src="config.js"></script>
+<script>
+(function () {
+  "use strict";
+  var formulaire = document.getElementById("formulaire-question");
+  var champ = document.getElementById("champ-question");
+  var zone = document.getElementById("zone-reponse");
+  var bouton = formulaire.querySelector("button[type=submit]");
+
+  function echapperHtml(texte) {
+    return texte
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  function markdownMinimal(texte) {
+    var echappe = echapperHtml(texte);
+    echappe = echappe.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    echappe = echappe.replace(/(https?:\/\/[^\s<]+)/g, "<a href=\"$1\" target=\"_blank\" rel=\"noopener\">$1</a>");
+    return echappe.replace(/\n/g, "<br>");
+  }
+
+  formulaire.addEventListener("submit", function (evt) {
+    evt.preventDefault();
+    var question = champ.value.trim();
+    if (!question) {
+      return;
+    }
+    if (!window.FUNCTION_URL || window.FUNCTION_URL === "A_REMPLIR_PAR_AH") {
+      zone.textContent = "Configuration incomplète : FUNCTION_URL non renseigné (config.js).";
+      return;
+    }
+    bouton.disabled = true;
+    zone.textContent = "Recherche en cours…";
+    fetch(window.FUNCTION_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: question })
+    })
+      .then(function (rep) {
+        if (!rep.ok) {
+          throw new Error("reponse HTTP " + rep.status);
+        }
+        return rep.json();
+      })
+      .then(function (donnees) {
+        zone.innerHTML = markdownMinimal(donnees.reponse || "");
+      })
+      .catch(function () {
+        zone.textContent = "Le service est indisponible pour le moment.";
+      })
+      .then(function () {
+        bouton.disabled = false;
+      });
+  });
+})();
+</script>
+
+</body>
+</html>

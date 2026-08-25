@@ -1,0 +1,110 @@
+/* style.css -- BKL-FOR-005 (a). Contrastes calcules (WCAG) :
+   texte principal / fond   = 17.4 : 1
+   texte attenue / fond     = 8.86 : 1
+   lien / fond               = 6.57 : 1
+   texte bouton / fond bouton = 11.48 : 1
+   texte / fond zone reponse = 15.82 : 1
+   (mini attendu mandat : 4.5 : 1 -- toutes les paires en marge large) */
+
+:root {
+    --fond: #ffffff;
+    --texte: #1a1a1a;
+    --texte-attenue: #4a4a4a;
+    --lien: #0b5fa5;
+    --bouton-fond: #1f3a5f;
+    --bouton-texte: #ffffff;
+    --zone-fond: #f4f4f4;
+    --bordure: #cccccc;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 1.5rem;
+    max-width: 42rem;
+    margin-inline: auto;
+    background: var(--fond);
+    color: var(--texte);
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    line-height: 1.5;
+}
+
+header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.sous-titre {
+    color: var(--texte-attenue);
+    margin-top: 0;
+}
+
+.sous-titre a,
+footer a {
+    color: var(--lien);
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+}
+
+label {
+    font-weight: 600;
+}
+
+textarea {
+    font: inherit;
+    padding: 0.6rem;
+    border: 1px solid var(--bordure);
+    border-radius: 0.4rem;
+    resize: vertical;
+}
+
+button {
+    align-self: flex-start;
+    background: var(--bouton-fond);
+    color: var(--bouton-texte);
+    border: none;
+    border-radius: 0.4rem;
+    padding: 0.6rem 1.2rem;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+#zone-reponse {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: var(--zone-fond);
+    border-radius: 0.4rem;
+    min-height: 2rem;
+    white-space: normal;
+}
+
+#zone-reponse a {
+    color: var(--lien);
+}
+
+.avertissement {
+    color: var(--texte-attenue);
+    font-size: 0.9rem;
+}
+
+footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--bordure);
+    color: var(--texte-attenue);
+    font-size: 0.85rem;
+}
