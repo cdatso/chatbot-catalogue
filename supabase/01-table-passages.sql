@@ -43,33 +43,39 @@ create policy "lecture publique passages"
 
 -- Fonction de recherche plein texte, appelable par anon via PostgREST
 -- (rpc). websearch_to_tsquery accepte une saisie en langage naturel.
+--
+-- CORRECTIF ATELIER 26/08/2026 (BKL-FOR-005 (b) v2, L1) : ET strict puis
+-- repli OU classe. websearch_to_tsquery applique un ET entre les termes
+-- porteurs d'une question en phrase complete -- une question qui nomme
+-- plusieurs concepts a la fois ne matchait alors aucun passage. Le
+-- correctif tente d'abord la recherche stricte (websearch_to_tsquery,
+-- ET) ; si elle ne rend rien, un repli en OU classe par ts_rank prend le
+-- relais (plainto_tsquery, operateurs & retournes en |). Verbatim de
+-- l'annexe A du mandat -- fait foi, le dernier mot appartient au fichier
+-- rejoue en base, jamais a une modification locale du SQL Editor.
 create or replace function public.rechercher_passages(q text, k int default 6)
-returns table (
-    slug text,
-    titre text,
-    realisateur text,
-    annee int,
-    url text,
-    section text,
-    texte text,
-    rang real
-)
-language sql
-stable
-as $$
-    select
-        p.slug,
-        p.titre,
-        p.realisateur,
-        p.annee,
-        p.url,
-        p.section,
-        p.texte,
-        ts_rank(p.tsv, websearch_to_tsquery('french', q)) as rang
-    from public.passages p
-    where p.tsv @@ websearch_to_tsquery('french', q)
-    order by rang desc
-    limit k;
+returns table (slug text, titre text, realisateur text, annee int,
+               url text, section text, texte text, rang real)
+language sql stable as $$
+    with strict as (
+        select p.slug, p.titre, p.realisateur, p.annee, p.url, p.section, p.texte,
+               ts_rank(p.tsv, websearch_to_tsquery('french', q)) as rang
+        from public.passages p
+        where p.tsv @@ websearch_to_tsquery('french', q)
+        order by rang desc limit k
+    ), souple as (
+        select p.slug, p.titre, p.realisateur, p.annee, p.url, p.section, p.texte,
+               ts_rank(p.tsv, replace(plainto_tsquery('french', q)::text, ' & ', ' | ')::tsquery) as rang
+        from public.passages p
+        where plainto_tsquery('french', q)::text <> ''
+          and p.tsv @@ replace(plainto_tsquery('french', q)::text, ' & ', ' | ')::tsquery
+        order by rang desc limit k
+    )
+    select * from (
+        select * from strict
+        union all
+        select * from souple where not exists (select 1 from strict)
+    ) r order by rang desc limit k;
 $$;
 
 grant execute on function public.rechercher_passages(text, int) to anon;
