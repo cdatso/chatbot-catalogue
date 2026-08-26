@@ -70,3 +70,29 @@ pour l'exécution réelle) ne sort **jamais** du dashboard vers un fichier
 lu par un outil de lecture standard, un dépôt, ou le chat — elle se
 saisit directement dans les variables d'environnement Netlify au moment
 du déploiement, ou dans la session PowerShell d'AH pour un test local.
+
+## ⑤ Vérifier le rafraîchissement (L6, spec 25/08)
+
+Après ① + ② + ③ + ④, la table est fraîchement chargée : elle doit être
+exactement à jour avec les fichiers locaux. Vérifie-le sans écrire
+(clé `anon` seule, celle relevée à l'étape ④ ci-dessus) :
+
+```powershell
+$env:SUPABASE_URL = "https://<ref>.supabase.co"          # valeur de l'etape ④
+$env:SUPABASE_ANON_KEY = "<clé anon publique>"            # valeur de l'etape ④
+py -3.12 outils\rafraichir-passages.py
+```
+
+(`--simuler` est le mode par défaut — pas besoin de le taper ; le
+drapeau existe pour la lisibilité si tu préfères l'écrire.)
+
+**Sortie attendue, juste après un chargement frais** : `0 nouvelle /
+0 modifiee / 0 disparue / 46 inchangees`. Un écart (des « modifiées »
+ou des « nouvelles ») signale que le CSV importé et les fichiers locaux
+de `analyses-de-films` ne correspondent plus — signale-le avant de
+poursuivre.
+
+**Après une nouvelle analyse publiée sur le site**, c'est LA commande à
+rejouer (le détecteur de dérive du contrôle ③ ligne 8 dit QUAND) ; si le
+diff n'est pas vide, rejoue avec `--appliquer` pour l'exécuter (détail :
+`README.md`, section « La table `passages` est une copie datée »).
