@@ -29,6 +29,20 @@ create table public.passages (
 
 create index passages_tsv_idx on public.passages using gin (tsv);
 
+-- BKL-FOR-005 (b) v2, L6 (spec NOTE-SPEC-REFRESH-PASSAGES-2026-08-25.md,
+-- regle D-7 du patron serverless v1.1) : la table est une COPIE DATEE
+-- d'un site qui publie -- elle porte donc son detecteur de derive
+-- (02-controles.sql, ligne 8) ET sa procedure de rafraichissement
+-- incremental (outils\rafraichir-passages.py, diff PAR PAGE). Cette
+-- colonne en est le support : SHA-256 de la page source, identique pour
+-- tous les passages d'une meme page. ADD COLUMN IF NOT EXISTS = geste
+-- idempotent (rejouable, D-4) qu'il s'agisse d'une base neuve (creee au
+-- dessus) ou de la base du 25/08 (chargee SANS cette colonne : ses
+-- lignes existantes portent alors page_hash NULL, et le premier
+-- rafraichissement les traite comme "modifiees" -- un rechargement
+-- complet unique, cout nul a 462 lignes).
+alter table public.passages add column if not exists page_hash text;
+
 -- Active le controle d'acces ligne par ligne : sans policy, personne ne
 -- lit ni n'ecrit -- meme pas via la clef anon.
 alter table public.passages enable row level security;

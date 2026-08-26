@@ -26,8 +26,11 @@ Projet `cdatso` → **Table Editor** → table `passages` → **Insert** →
 
 Encodage UTF-8 sans BOM, séparateur virgule (RFC4180). Colonne `id`
 absente du CSV (identité générée). Si l'importeur propose un mapping,
-vérifie qu'il retient les 8 colonnes telles quelles (`slug`, `titre`,
-`realisateur`, `annee`, `url`, `section`, `ordre`, `texte`).
+vérifie qu'il retient les 9 colonnes telles quelles (`slug`, `titre`,
+`realisateur`, `annee`, `url`, `section`, `ordre`, `texte`,
+`page_hash` — ajoutée au temps (b) v2, L6 : SHA-256 de la page source,
+identique pour tous les passages d'une même page, support du
+rafraîchissement incrémental).
 
 ## ③ Vérifier
 

@@ -30,6 +30,8 @@ index.html (page de chat minimale)
 ## Fichiers
 
 - `outils/ingerer-passages.py` — ingestion stdlib, fail-closed (8 contrôles).
+- `outils/rafraichir-passages.py` — rafraîchissement incrémental (voir
+  section dédiée ci-dessous).
 - `outils/tester-chatbot.py` — testeur miroir exact de la function ; mode
   `--simuler` (aucun réseau, aucune clé) ou exécution réelle (clés en
   variables d'environnement de la session PowerShell d'AH, jamais en
@@ -55,6 +57,35 @@ index.html (page de chat minimale)
 
 **Zéro secret dans ce dépôt** : aucune clé n'existe sur le poste qui l'a
 préparé. `.gitignore` exclut `.env` et tout fichier `*.acces*`.
+
+## La table `passages` est une copie datée
+
+`donnees/passages.csv`, une fois importé, devient la table `passages` --
+une **copie** figée au moment de l'ingestion d'un site (`analyses-de-films`)
+qui **publie** de nouvelles analyses. Sans procédure de rafraîchissement,
+cette copie ment dès la 47ᵉ analyse (règle **D-7** du patron serverless
+`claude-config\PATRON-SERVICE-SERVERLESS.md`).
+
+**Détecteur de dérive** : `supabase/02-controles.sql`, ligne 8 (« slugs
+distincts en table = slugs du registre publié ») — un écart dit QUAND
+rafraîchir.
+
+**Procédure, manuelle par AH après chaque publication** :
+
+```
+py -3.12 outils\rafraichir-passages.py             (par defaut : --simuler,
+                                                      diff affiche, rien ecrit)
+py -3.12 outils\rafraichir-passages.py --appliquer  (execute le diff --
+                                                      geste explicite)
+```
+
+Le script hache chaque page locale (`films/<slug>.html`, SHA-256, colonne
+`page_hash`) et la compare au hash déjà en table : diff **par page**
+(nouvelles / modifiées / disparues / inchangées), jamais un rechargement
+aveugle de la table servie. `--simuler` lit avec la clé `anon` (lecture
+publique) ; `--appliquer` exige `SUPABASE_SERVICE_KEY` en variable
+d'environnement du **poste** (jamais en session, jamais dans ce dépôt) et
+demande confirmation avant de supprimer une page disparue.
 
 ## Licence
 

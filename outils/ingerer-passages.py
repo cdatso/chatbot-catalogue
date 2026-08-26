@@ -29,6 +29,15 @@
 # qui depasserait 8000 caracteres SANS <h3> interne n'est pas couverte
 # par cet arbitrage -- le script s'arrete alors fail-closed (nouveau cas
 # a eliciter, non rencontre sur ce run).
+#
+# COLONNE page_hash (BKL-FOR-005 (b) v2, L6, spec
+# NOTE-SPEC-REFRESH-PASSAGES-2026-08-25.md) : SHA-256 des octets bruts
+# du fichier films/<slug>.html source, IDENTIQUE pour tous les passages
+# d'une meme page -- calcule UNE fois par film, jamais recalcule a
+# partir du texte deja decode (meme methode que outils/rafraichir-
+# passages.py : hash_page() y lit aussi read_bytes(), jamais read_text() --
+# un ecart de methode entre les deux scripts romprait la comparaison de
+# hash au premier refresh).
 
 import re
 import csv
@@ -176,6 +185,7 @@ def main():
         chemin = FILMS_DIR / (slug + ".html")
         if not chemin.exists():
             echec("page manquante pour le slug '" + slug + "' : " + str(chemin))
+        page_hash = hashlib.sha256(chemin.read_bytes()).hexdigest()
         texte = chemin.read_text(encoding="utf-8")
         preambule, sections = decouper_page(texte)
         if sections is None:
@@ -188,7 +198,7 @@ def main():
         if preambule:
             lignes_passages.append([
                 slug, film["title"], film["director"], film["year"],
-                url_absolue, "Ouverture", str(ordre), preambule,
+                url_absolue, "Ouverture", str(ordre), preambule, page_hash,
             ])
             ordre += 1
 
@@ -210,13 +220,13 @@ def main():
                 for sous_titre, sous_corps in sous_sections:
                     lignes_passages.append([
                         slug, film["title"], film["director"], film["year"],
-                        url_absolue, sous_titre, str(ordre), sous_corps,
+                        url_absolue, sous_titre, str(ordre), sous_corps, page_hash,
                     ])
                     ordre += 1
                 continue
             lignes_passages.append([
                 slug, film["title"], film["director"], film["year"],
-                url_absolue, titre, str(ordre), corps,
+                url_absolue, titre, str(ordre), corps, page_hash,
             ])
             ordre += 1
 
@@ -228,7 +238,7 @@ def main():
     OUT_PASSAGES.parent.mkdir(parents=True, exist_ok=True)
     with open(OUT_PASSAGES, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f, quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
-        w.writerow(["slug", "titre", "realisateur", "annee", "url", "section", "ordre", "texte"])
+        w.writerow(["slug", "titre", "realisateur", "annee", "url", "section", "ordre", "texte", "page_hash"])
         for row in lignes_passages:
             w.writerow(row)
 
