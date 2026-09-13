@@ -50,7 +50,7 @@ import urllib.request
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SITE_ROOT = Path(r"C:\Users\cdats\Claude\Projects\analyses-de-films")
+SITE_ROOT = Path(r"C:\Users\cdats\Claude\CIN\analyses-de-films")
 FILMS_DATA = SITE_ROOT / "assets" / "films-data.js"
 FILMS_DIR = SITE_ROOT / "films"
 INGESTEUR_PY = Path(__file__).resolve().parent / "ingerer-passages.py"
