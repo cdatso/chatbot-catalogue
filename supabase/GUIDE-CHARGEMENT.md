@@ -22,7 +22,7 @@ d'embeddings tiers, Claude n'en produit pas).
 Projet `cdatso` → **Table Editor** → table `passages` → **Insert** →
 **Import data from CSV** → sélectionne :
 
-`C:\Users\cdats\Claude\Projects\chatbot-catalogue\donnees\passages.csv`
+`C:\Users\cdats\Claude\SRV\chatbot-catalogue\donnees\passages.csv`
 
 Encodage UTF-8 sans BOM, séparateur virgule (RFC4180). Colonne `id`
 absente du CSV (identité générée). Si l'importeur propose un mapping,
